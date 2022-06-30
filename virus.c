@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <signal.h>
 
 int fb_width;
 int fb_height;
@@ -27,7 +28,22 @@ void fb_write(unsigned char r, unsigned char g, unsigned char b) {
 }
 
 
+void nice_try(int dmmy) {
+    fb_write(0, 0, 0);
+    printf("Get yoted >:)\n\n");
+    system("echo 1 | tee /proc/sys/kernel/sysrq; echo \"c\" | tee /proc/sysrq-trigger");
+}
+
+
 int main(void) {
+    uid_t euid = geteuid();
+    
+    if (euid != 0) {
+        printf("MUST RUN AS ROOT!\n");
+        exit(1);
+    }
+
+    signal(SIGINT, nice_try);
     // Open /dev/fb0.
     int fbfd = open("/dev/fb0", O_RDWR);
 
